@@ -1,0 +1,239 @@
+{% load staticfiles %}
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="renderer" content="webkit|ie-comp|ie-stand">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+<!--[if lt IE 9]>
+<script type="text/javascript" src="/static/lib/html5shiv.js"></script>
+<script type="text/javascript" src="/static/lib/respond.min.js"></script>
+<![endif]-->
+<link rel="stylesheet" type="text/css" href="/static/h-ui/css/H-ui.min.css" />
+<link rel="stylesheet" type="text/css" href="/static/h-ui.admin/css/H-ui.admin.css" />
+<link rel="stylesheet" type="text/css" href="/static/lib/Hui-iconfont/1.0.8/iconfont.css" />
+<link rel="stylesheet" type="text/css" href="/static/h-ui.admin/skin/default/skin.css" id="skin" />
+<link rel="stylesheet" type="text/css" href="/static/h-ui.admin/css/style.css" />
+<link rel="stylesheet" type="text/css" href="/static/bootstrap-3.3.7-dist/css/bootstrap.min.css">
+<link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+<script src="{% static 'js/jquery.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
+<!--[if IE 6]>
+<script type="text/javascript" src="/static/lib/DD_belatedPNG_0.0.8a-min.js" ></script>
+<script>DD_belatedPNG.fix('*');</script>
+<![endif]-->
+   <title>企业信息查询系统</title>
+    {% comment %}
+    使用 {% load staticfiles %} 来代替手动指定 静态文件的路径
+   <link href="../static/css/bootstrap.min.css" rel="stylesheet">
+   <script src="../static/js/jquery.min.js"></script>
+   <script src="../static/js/bootstrap.min.js"></script>
+   {% endcomment %}
+
+    {% comment %}
+    # 不需要使用 JavaScript 来判空, 因为 Django 自带过滤器
+    <script>
+    function check(form){
+        if(form.q.value==""){
+          alert("查询内容不能为空 !");
+          form.q.focus();
+          return false;
+        }
+    }
+    </script>
+    {% endcomment %}
+   <style>
+        h1 {
+            font-family: Times New Roman, Lucida Handwriting;
+        }
+        body {
+
+        }
+   </style>
+</head>
+
+<body>
+<script type="text/javascript">
+function deleteUser(id) {
+        if (window.confirm("您确认删除该条记录吗？")) {
+            var post_data = {
+                "id": id
+            };
+
+            $.ajax({
+                url: '/del/',
+                type: 'POST',
+                data: post_data,
+                dataType: 'json',
+                success: function (data) {
+                    alert(data["status"]);
+                    window.location.reload(true);
+                    //window.location.reload(true);　//数据删除后，进行页面刷新
+                    //window.location.reload(true);
+                }
+
+            });
+        } else {
+
+        }
+
+    }
+</script>
+
+    <div class="container" id="container">
+        <div id="page-header">
+            <h1 class="text-center"> 企业信息查询系统 </h1>
+        </div>
+
+        <div class="row">
+        <form action="" method="GET" class="form-horizontal" role="form">
+            {# 如果你使用POST的方法时，必须添加{% csrf_token %}标签，用于处理csrf安全机制 #}
+            {# {% csrf_token %} #}
+            <div id="checkbox" class="text-center">
+                <label class="checkbox-inline text-success">采用模糊匹配</label>
+            </div>
+
+            <div class="col-md-10 col-md-offset-1">
+                <div class="col-md-2 col-md-offset-0">
+                    {{ form.condition }}
+                </div>
+
+                <div class="input-group col-md-10 col-md-offset-1">
+                    {{ form.queryContent.field.errors }}
+                    {{ form.queryContent }}
+                    {% comment %}
+                    {{ form.queryContent }} 在 html 中将被渲染成以下代码
+                    <input type="text" class="form-control is-invalid" name="q" placeholder="请输入内容..." value="">
+                    {% endcomment %}
+                    <div class="input-group-btn">
+                        <button type="submit" class="btn btn-primary" required >Search</button>
+                        {% comment %}
+                         queryContent 被设定为 required, 那么不需要为 button 增加 js 验证数据为空的 onclick 属性了
+                         onclick="check(form)"
+                        {% endcomment %}
+                        <div class="invalid-feedback">
+                            Please provide a valid value.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+        </div>
+        <br>
+
+        {% if countNum == -1 %}
+        {% else %}
+            {% if countNum == 0 %}
+                <div class="alert alert-warning alert-dismissible col-md-10 col-md-offset-1" role="alert">
+                    <button type="button" class="close" data-dismiss="alert">
+                    <span aria-hidden="true">&times;</span>
+                    <span class="sr-only">Close</span></button>
+                    找不到与<b>&nbsp{{ keywords }}&nbsp</b>相关的结果。请更换其他<b>&nbsp关键词或类型&nbsp</b>试试。</div></div>
+            {% else %}
+                <div class="row">
+                <div class="alert alert-success alert-dismissible col-md-10 col-md-offset-1" role="alert">
+                    <button type="button" class="close" data-dismiss="alert">
+                    <span aria-hidden="true">&times;</span>
+                    <span class="sr-only">Close</span></button>
+                    找到与<b>&nbsp {{ keywords }} &nbsp</b>相关的结果 {{ countNum }} 个。用时 {{ time }} 秒。</div>
+                <div class="table-responsive col-md-12">
+
+                    {% for cominfo in users %}
+                     <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title"><input type="checkbox" value="{{ cominfo.id }}" name="chckBox" style="width:15px; height:15px;vertical-align:text-top; margin-top:0;" >&nbsp;<a href="#">{{ cominfo.name }}</a></h4>
+                </div>
+                <table class="table" border="0">
+                <thead>
+                <tr>
+                     <td >统一社会信用代码</td>
+                     <td >组织机构代码</td>
+                     <td >注册号</td>
+                     <td >公司类型</td>
+                     <td >企业地址</td>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                     <td>{{ cominfo.credit_code}}</td>
+                     <td>{{ cominfo.organization_code }}</td>
+                     <td>{{ cominfo.registration_num}}</td>
+
+
+                     <td>{{ cominfo.style }}</td>
+                     <td>{{ cominfo.address }}</td>
+                </tr>
+                </tbody>
+                </table>
+            <table class="table" border="0">
+                <thead>
+                <tr>
+                     <td >经营状态</td>
+                     <td >公司法人</td>
+                     <td >注册资本</td>
+                     <td >登记机关</td>
+                     <td >所属行业</td>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                     <td>{{ cominfo.status }}</td>
+                     <td>{{ cominfo.legal_person }}</td>
+                     <td>{{ cominfo.capital}}</td>
+                     <td>{{ cominfo.authority}}</td>
+                     <td>{{ cominfo.trade }}</td>
+                </tr>
+                </tbody>
+            </table>
+            <table class="table" border="0">
+                <thead>
+                <tr>
+                     <td >成立日期</td>
+                     <td >发照日期</td>
+                     <td >营业期限</td>
+                     <td colspan="2"> </td>
+                 </tr>
+                 </thead>
+                 <tbody>
+                 <tr>
+                     <td>{{ cominfo.e_date}}</td>
+                     <td>{{ cominfo.f_date }}</td>
+                     <td>{{ cominfo.term }}</td>
+                     <td ><a href="{% url 'mod_cominfo' %}?id={{ cominfo.id}}">修改</a></td>
+                     <td> <a href="#" onclick="deleteUser({{ cominfo.id }})">删除</a></td>
+                 </tr>
+                 </tbody>
+             </table>
+                </div>
+                    {% endfor %}
+                    </div></div>
+
+                <div id="pages" class="text-center" >
+                    <nav>
+                        <ul class="pagination">
+                            <li class="step-links">
+                                {% if users.has_previous %}
+                                    <a class='active' href="?condition={{ condition }}&queryContent={{ keywords }}&page={{ users.previous_page_number }}">上一页</a>
+                                {% endif %}
+
+                                <span class="current">
+                                    Page {{ users.number }} of {{ users.paginator.num_pages }}
+                                </span>
+
+                                {% if users.has_next %}
+                                    <a class='active' href="?condition={{ condition }}&queryContent={{ keywords }}&page={{ users.next_page_number }}">下一页</a>
+                                {% endif %}
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</footer>
+<script type="text/javascript" src="/static/lib/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="/static/h-ui/js/H-ui.min.js"></script>
+</body>
+</html>
